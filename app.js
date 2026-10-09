@@ -26,9 +26,41 @@ function qrCanvas(value,size){const qr=new window.OfflineQRCode(-1,1);qr.addData
 function renderQrs(){const h=$('qrHouse').value,root=$('qrCards');root.replaceChildren();for(const s of state.students.filter(s=>!h||s.house===h)){const div=document.createElement('div');div.className='qr-card';const title=document.createElement('strong');title.textContent=s.name;const detail=document.createElement('small');detail.textContent=s.id+' · '+s.group_name+' · '+s.house;div.append(title,qrCanvas(s.token,155),detail);root.append(div)}}
 function download(name,content,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}const csv=rows=>rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
 function parseCsv(text){const rows=[];let row=[],v='',quoted=false;const delimiter=(text.split(/\r?\n/)[0].match(/;/g)||[]).length>(text.split(/\r?\n/)[0].match(/,/g)||[]).length?';':',';for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){v+='"';i++}else quoted=!quoted}else if(c===delimiter&&!quoted){row.push(v);v=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(v);if(row.some(x=>x.trim()))rows.push(row);row=[];v=''}else v+=c}row.push(v);if(row.some(x=>x.trim()))rows.push(row);return rows}
-let stream=null,video=null,timer=null,scanning=false,last='',lastAt=0;
-async function stop(){scanning=false;clearTimeout(timer);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video=null;$('reader').replaceChildren()}
-async function start(){if(scanning)return;if(!('BarcodeDetector' in window))return msg('Este navegador no admite BarcodeDetector. Usa matrícula manual. Para escanear QR en todos los iPhone falta integrar un lector QR local compatible.',false);try{const detector=new BarcodeDetector({formats:['qr_code']});stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});video=document.createElement('video');video.setAttribute('playsinline','');video.autoplay=true;video.muted=true;video.srcObject=stream;$('reader').replaceChildren(video);await video.play();scanning=true;msg('Cámara activa. Acerca el QR.',true);const loop=async()=>{if(!scanning)return;try{if(video.readyState>=2){const results=await detector.detect(video);if(results.length){const code=results[0].rawValue,now=Date.now();if(code!==last||now-lastAt>1800){last=code;lastAt=now;mark(code)}}}}catch{}if(scanning)timer=setTimeout(loop,200)};loop()}catch(e){await stop();msg('No se pudo abrir la cámara: '+e.message,false)}}
+let stream=null,video=null,timer=null,scanning=false,last='',lastAt=0,scanCanvas=null,scanContext=null;
+async function stop(){scanning=false;clearTimeout(timer);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video=null;scanCanvas=null;scanContext=null;$('reader').replaceChildren()}
+async function start(){
+  if(scanning)return;
+  if(!navigator.mediaDevices?.getUserMedia)return msg('Este navegador no permite acceder a la cámara. Abre la aplicación en Safari o Chrome con HTTPS.',false);
+  let detector=null;
+  if('BarcodeDetector' in window){try{detector=new BarcodeDetector({formats:['qr_code']})}catch(e){console.warn('BarcodeDetector no disponible:',e)}}
+  if(!detector&&typeof window.jsQR!=='function')return msg('No se cargó el lector QR alternativo (jsQR.js). Comprueba que el archivo esté publicado junto a app.js y actualiza la página.',false);
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    video=document.createElement('video');video.setAttribute('playsinline','');video.autoplay=true;video.muted=true;video.srcObject=stream;
+    $('reader').replaceChildren(video);await video.play();scanning=true;
+    if(!detector){scanCanvas=document.createElement('canvas');scanContext=scanCanvas.getContext('2d',{willReadFrequently:true});if(!scanContext)throw Error('No se pudo preparar el lector de imágenes.')}
+    msg('Cámara activa. Acerca el código QR.',true);
+    const loop=async()=>{
+      if(!scanning)return;
+      try{
+        if(video.readyState>=2){
+          let code='';
+          if(detector){const results=await detector.detect(video);code=results[0]?.rawValue||''}
+          else if(video.videoWidth&&video.videoHeight){
+            const maxSide=720,ratio=Math.min(1,maxSide/Math.max(video.videoWidth,video.videoHeight));
+            scanCanvas.width=Math.max(1,Math.round(video.videoWidth*ratio));scanCanvas.height=Math.max(1,Math.round(video.videoHeight*ratio));
+            scanContext.drawImage(video,0,0,scanCanvas.width,scanCanvas.height);
+            const pixels=scanContext.getImageData(0,0,scanCanvas.width,scanCanvas.height);
+            code=window.jsQR(pixels.data,pixels.width,pixels.height,{inversionAttempts:'attemptBoth'})?.data||'';
+          }
+          if(code){const now=Date.now();if(code!==last||now-lastAt>1800){last=code;lastAt=now;mark(code)}}
+        }
+      }catch(e){console.warn('Error al leer QR:',e)}
+      if(scanning)timer=setTimeout(loop,250);
+    };
+    loop();
+  }catch(e){await stop();msg('No se pudo abrir la cámara: '+e.message+'. Comprueba los permisos de cámara del navegador.',false)}
+}
 $('loginForm').onsubmit=async e=>{e.preventDefault();$('loginMsg').textContent='Ingresando…';try{await signIn($('alias').value.trim().toLowerCase(),$('pin').value);$('pin').value='';$('loginMsg').textContent=''}catch(err){$('loginMsg').textContent=err.message}};
 $('logout').onclick=async()=>{if(state.pending.length&&!confirm('Hay asistencias pendientes. Si cierras sesión podrían perderse. ¿Continuar?'))return;await stop();state={session:null,profile:null,students:[],missions:[],attendance:[],pending:[]};save();showApp()};
 $('sync').onclick=sync;window.addEventListener('online',()=>{if(state.profile)sync()});window.addEventListener('offline',()=>{if(state.profile)render()});
