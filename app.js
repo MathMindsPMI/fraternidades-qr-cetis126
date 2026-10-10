@@ -23,7 +23,24 @@ function reportRows(){const m=$('missionReport').value,h=$('reportHouse').value,
 function renderReports(){const rows=reportRows(),n=rows.filter(r=>r.attendance).length;$('reportSummary').textContent=`Total: ${rows.length} · Presentes: ${n} · Ausentes: ${rows.length-n}`;$('reportRows').innerHTML=rows.map(s=>`<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(s.group_name)}</td><td>${esc(s.house)}</td><td>${s.attendance?'Presente':'Ausente'}</td><td>${s.attendance?esc(new Date(s.attendance.recorded_at).toLocaleString('es-MX')):'—'}</td><td>${s.attendance?(s.attendance.synced?'Sincronizado':'Pendiente'):'—'}</td></tr>`).join('')}
 function renderRecent(){const seen=records($('missionScanner').value);$('recent').innerHTML=[...seen.entries()].slice(-10).reverse().map(([id,a])=>{const s=state.students.find(s=>s.id===id);return s?`<div class="notice ok">✓ ${esc(s.name)} · ${esc(s.house)} · ${a.synced?'Sincronizado':'Pendiente'}</div>`:''}).join('')||'<p class="muted">Sin registros.</p>'}
 function qrCanvas(value,size){const qr=new window.OfflineQRCode(-1,1);qr.addData(value);qr.make();const n=qr.getModuleCount(),quiet=4,scale=Math.max(3,Math.floor(size/(n+quiet*2))),c=document.createElement('canvas');c.width=c.height=(n+quiet*2)*scale;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#111';for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(qr.isDark(y,x))ctx.fillRect((x+quiet)*scale,(y+quiet)*scale,scale,scale);c.style.width=size+'px';return c}
-function renderQrs(){const h=$('qrHouse').value,root=$('qrCards');root.replaceChildren();for(const s of state.students.filter(s=>!h||s.house===h)){const div=document.createElement('div');div.className='qr-card';const title=document.createElement('strong');title.textContent=s.name;const detail=document.createElement('small');detail.textContent=s.id+' · '+s.group_name+' · '+s.house;div.append(title,qrCanvas(s.token,155),detail);root.append(div)}}
+function renderQrs(){
+ const h=$('qrHouse').value,root=$('qrCards');root.replaceChildren();
+ const logos={Agua:'./logo-agua.jpeg',Aire:'./logo-aire.jpeg',Tierra:'./logo-tierra.jpeg',Fuego:'./logo-fuego.jpeg'};
+ for(const s of state.students.filter(s=>!h||s.house===h)){
+  const div=document.createElement('article');div.className='qr-card house-'+s.house;
+  const top=document.createElement('div');top.className='qr-top';
+  const institution=document.createElement('span');institution.textContent='CETis 126 · FRATERNIDADES';
+  const cetis=document.createElement('img');cetis.src='./logo-cetis126.jpeg';cetis.alt='CETis 126';top.append(institution,cetis);
+  const middle=document.createElement('div');middle.className='qr-middle';
+  const logo=document.createElement('img');logo.className='qr-logo';logo.src=logos[s.house]||'./logo-fraternidades.webp';logo.alt='Fraternidad '+s.house;
+  const house=document.createElement('div');house.className='qr-house-name';house.textContent='FRATERNIDAD '+s.house.toUpperCase();
+  const name=document.createElement('div');name.className='qr-student';name.textContent=s.name;
+  const detail=document.createElement('div');detail.className='qr-data';detail.textContent='Matrícula: '+s.id+' · Grupo: '+s.group_name;
+  middle.append(logo,house,name,qrCanvas(s.token,132),detail);
+  const bottom=document.createElement('div');bottom.className='qr-bottom';bottom.textContent='4 ELEMENTOS · 1 COMUNIDAD';
+  div.append(top,middle,bottom);root.append(div);
+ }
+}
 function download(name,content,type='text/csv;charset=utf-8'){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}const csv=rows=>rows.map(r=>r.map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
 function parseCsv(text){const rows=[];let row=[],v='',quoted=false;const delimiter=(text.split(/\r?\n/)[0].match(/;/g)||[]).length>(text.split(/\r?\n/)[0].match(/,/g)||[]).length?';':',';for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){v+='"';i++}else quoted=!quoted}else if(c===delimiter&&!quoted){row.push(v);v=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(v);if(row.some(x=>x.trim()))rows.push(row);row=[];v=''}else v+=c}row.push(v);if(row.some(x=>x.trim()))rows.push(row);return rows}
 let stream=null,video=null,timer=null,scanning=false,last='',lastAt=0,scanCanvas=null,scanContext=null;

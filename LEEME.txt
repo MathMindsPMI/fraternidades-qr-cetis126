@@ -1,0 +1,9 @@
+ACTUALIZACION DE CREDENCIALES CETis 126
+
+Sube los 8 archivos index.html, app.js, sw.js y los cinco archivos logo-*.jpeg a la raiz del repositorio de GitHub. Reemplaza los tres archivos existentes. NO elimines config.js, jsQR.js, qr-local.js ni otros archivos.
+
+Los QR conservan el token existente de cada alumno; no se cambian datos de Supabase.
+
+Imprime desde Credenciales QR > Imprimir / guardar PDF. Elige Carta, escala 100%, márgenes predeterminados o ninguno, activa graficos de fondo y desactiva encabezados y pies de pagina. Nueve por hoja.
+
+Si se muestra la version antigua, cierra la pestaña y vuelve a abrir la pagina conectada a Internet para que se actualice el service worker.
