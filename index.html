@@ -33,7 +33,37 @@
  .qr-bottom{font-size:8px!important;padding:5px 3px!important}
 }
 </style></head><body><header><div class="wrap"><img class="frat" src="./logo-fraternidades.webp" alt="Fraternidades"><div><h1>FRATERNIDADES QR</h1><small>CETis 126 · Control de asistencia multiusuario</small><div id="status">Sin iniciar sesión</div></div><img class="dgeti" src="./logo-dgeti.png" alt="DGETI"></div></header><main>
-<section id="login" class="panel"><h2>Acceso para tutores y administración</h2><p class="muted">Usa el alias y PIN personal asignados por administración. El primer acceso requiere Internet.</p><form id="loginForm"><label>Usuario / alias</label><input id="alias" autocomplete="username" required placeholder="Ej. tierra"><label>PIN personal (8 o más caracteres recomendado)</label><input id="pin" type="password" autocomplete="current-password" required><div class="actions"><button>Ingresar</button></div></form><div id="loginMsg" class="notice"></div></section>
+
+<section id="login" class="panel">
+  <h2>Acceso para docentes, tutores y administración</h2>
+  <p class="muted">
+    Docentes: ingresen con su correo electrónico y contraseña.
+    Tutores y administración: utilicen su alias y PIN personal.
+    El primer acceso requiere Internet.
+  </p>
+
+<form id="loginForm">
+  <label>Correo electrónico o alias</label>
+  <input
+    id="alias"
+    autocomplete="username"
+    required
+    placeholder="Correo electrónico o alias"
+  >
+
+  <label>Contraseña o PIN personal</label>
+  <input
+    id="pin"
+    type="password"
+    autocomplete="current-password"
+    required
+  >
+
+  <div class="actions">
+    <button>Ingresar</button>
+  </div>
+</form>
+<div id="loginMsg" class="notice"></div></section>
 <div id="app" class="hidden"><div class="actions no-print"><span id="who"></span><button id="sync" type="button">Sincronizar ahora</button><button id="logout" class="secondary" type="button">Cerrar sesión</button></div><div id="syncState" class="notice">Cargando…</div><nav class="no-print"><button data-tab="dashboard" class="active">Panel</button><button data-tab="scanner">Escáner</button><button data-tab="students">Alumnos</button><button data-tab="qrs">Credenciales QR</button><button data-tab="reports">Reportes</button></nav>
 <section id="dashboard" class="panel"><h2>Panel de asistencia</h2><label>Misión / actividad</label><select id="missionDashboard"></select><div id="stats" class="grid"></div><div id="adminMission" class="hidden"><h3>Crear misión (administración)</h3><div class="grid"><div><label>Nombre</label><input id="missionName" placeholder="Misión 3 · Restauración"></div><div><label>Fecha</label><input id="missionDate" type="date"></div></div><div class="actions"><button id="addMission">Crear misión</button></div></div><p class="notice warn">Los registros sin sincronizar solo están en este dispositivo. Descarga respaldos y sincroniza cuando tengas Internet. No cierres sesión mientras haya pendientes.</p><div class="actions"><button id="backup" class="secondary">Respaldo local JSON</button></div></section>
 <section id="scanner" class="panel hidden"><h2>Registrar asistencia</h2><label>Misión</label><select id="missionScanner"></select><div class="actions"><button id="start">Iniciar cámara</button><button id="stop" class="secondary">Detener cámara</button></div><div id="reader"></div><div id="scanMsg" class="notice">Selecciona la misión para comenzar.</div><label>Registro manual por matrícula o token</label><input id="manual" placeholder="Matrícula"><div class="actions"><button id="manualBtn">Registrar</button></div><h3>Últimas asistencias</h3><div id="recent"></div></section>
