@@ -507,7 +507,7 @@ function updateAcademicAttendanceSummary() {
     ' · Vista previa sin guardar.';
 }
 
-function openAcademicAttendance(
+async function openAcademicAttendance(
   assignment,
   students
 ) {
