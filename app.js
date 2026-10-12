@@ -86,7 +86,35 @@ async function loadTeacherAssignments() {
   );
 
   console.log('Asignaturas y grupos del docente:', assignments);
+const list = $('academicAssignmentsList');
 
+if (list) {
+  list.replaceChildren();
+
+  if (assignments.length === 0) {
+    list.textContent = 'No tienes asignaturas o grupos asignados.';
+  } else {
+    assignments.forEach(a => {
+      const card = document.createElement('div');
+      card.className = 'stat';
+
+      const subject = document.createElement('h4');
+      subject.textContent =
+        a.academic_subjects?.name || 'Asignatura sin nombre';
+
+      const group = document.createElement('p');
+      group.textContent =
+        'Grupo: ' + (a.academic_groups?.name || 'Sin grupo');
+
+      const period = document.createElement('p');
+      period.textContent =
+        'Periodo escolar: ' + a.school_period;
+
+      card.append(subject, group, period);
+      list.appendChild(card);
+    });
+  }
+}
   return assignments;
 }
 async function pull(){if(!online())throw Error('Sin conexión');const [ss,mm,aa]=await Promise.all([request('/rest/v1/students?select=id,name,group_name,house,token&order=name.asc'),request('/rest/v1/missions?select=id,name,mission_date&order=mission_date.desc'),request('/rest/v1/attendance?select=mission_id,student_id,recorded_at,recorded_by')]);state.students=ss;state.missions=mm;state.attendance=aa;save();render()}
