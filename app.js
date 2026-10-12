@@ -115,13 +115,32 @@ const attendanceButton = document.createElement('button');
 attendanceButton.type = 'button';
 attendanceButton.textContent = '📝 Registrar asistencia';
 
-attendanceButton.onclick = () => {
-  alert(
-    'Registro de asistencia\n\n' +
-    'Asignatura: ' + (a.academic_subjects?.name || '') + '\n' +
-    'Grupo: ' + (a.academic_groups?.name || '') + '\n\n' +
-    'Próximamente abriremos la lista de alumnos.'
-  );
+attendanceButton.onclick = async () => {
+  const groupName = a.academic_groups?.name;
+
+  if (!groupName) {
+    alert('No se encontró el grupo asignado.');
+    return;
+  }
+
+  try {
+    const students = await request(
+      '/rest/v1/students?select=id,name,group_name' +
+      '&group_name=eq.' + encodeURIComponent(groupName) +
+      '&order=name.asc'
+    );
+
+    alert(
+      'Asignatura: ' + a.academic_subjects?.name + '\n' +
+      'Grupo: ' + groupName + '\n' +
+      'Alumnos encontrados: ' + students.length
+    );
+
+    console.log('Lista de alumnos:', students);
+
+  } catch (error) {
+    alert('No se pudieron consultar los alumnos: ' + error.message);
+  }
 };
 
 card.append(subject, group, period, attendanceButton);
