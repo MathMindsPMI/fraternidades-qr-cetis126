@@ -13,7 +13,47 @@ async function request(path,opts={}){if(!state.session)throw Error('Inicia sesi�
 async function signIn(alias,pin){if(!online())throw Error('El primer acceso necesita Internet.');
 if(!/^[a-z0-9_-]{3,32}$/.test(alias) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alias))throw Error('Escribe un alias o correo electrónico válido.');
 const email=alias.includes('@')?alias:alias+'@'+C.emailDomain;const d=await api('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password:pin})});state.session=d;const profiles=await request('/rest/v1/profiles?select=id,alias,display_name,role,house&id=eq.'+encodeURIComponent(d.user.id));if(!profiles.length){state.session=null;save();throw Error('Este usuario no tiene perfil asignado. Solicita acceso a administración.')}state.profile=profiles[0];state.students=[];state.missions=[];state.attendance=[];state.pending=[];save();await pull();showApp()}
-function showApp(){const p=state.profile,valid=!!(p&&state.session);$('login').classList.toggle('hidden',valid);$('app').classList.toggle('hidden',!valid);if(!valid)return;$('who').textContent=p.display_name+' · '+(p.role==='admin'?'Administración':p.house);$('adminMission').classList.toggle('hidden',p.role!=='admin');$('adminStudent').classList.toggle('hidden',p.role!=='admin');$('qrHouse').value=p.role==='admin'?'':p.house;$('qrHouse').disabled=p.role!=='admin';$('reportHouse').value=p.role==='admin'?'':p.house;$('reportHouse').disabled=p.role!=='admin';render();status(online()?'Conectado · '+state.pending.length+' registros pendientes':'Sin conexión · '+state.pending.length+' registros pendientes')}
+
+function showApp() {
+  const p = state.profile;
+  const valid = !!(p && state.session);
+  const isTeacher = valid && p.role === 'docente';
+
+  $('login').classList.toggle('hidden', valid);
+  $('app').classList.toggle('hidden', !valid || isTeacher);
+  $('academicApp').classList.toggle('hidden', !isTeacher);
+
+  if (!valid) return;
+
+  if (isTeacher) {
+    $('academicTeacher').textContent =
+      'Bienvenido(a), ' + p.display_name;
+
+    status('Sesión iniciada · Portal académico');
+    return;
+  }
+
+  $('who').textContent =
+    p.display_name + ' · ' +
+    (p.role === 'admin' ? 'Administración' : p.house);
+
+  $('adminMission').classList.toggle('hidden', p.role !== 'admin');
+  $('adminStudent').classList.toggle('hidden', p.role !== 'admin');
+
+  $('qrHouse').value = p.role === 'admin' ? '' : p.house;
+  $('qrHouse').disabled = p.role !== 'admin';
+
+  $('reportHouse').value = p.role === 'admin' ? '' : p.house;
+  $('reportHouse').disabled = p.role !== 'admin';
+
+  render();
+
+  status(
+    online()
+      ? 'Conectado · ' + state.pending.length + ' registros pendientes'
+      : 'Sin conexión · ' + state.pending.length + ' registros pendientes'
+  );
+}
 async function pull(){if(!online())throw Error('Sin conexión');const [ss,mm,aa]=await Promise.all([request('/rest/v1/students?select=id,name,group_name,house,token&order=name.asc'),request('/rest/v1/missions?select=id,name,mission_date&order=mission_date.desc'),request('/rest/v1/attendance?select=mission_id,student_id,recorded_at,recorded_by')]);state.students=ss;state.missions=mm;state.attendance=aa;save();render()}
 async function sync(){if(!state.profile||!state.session)return;if(!online()){status('Sin Internet · '+state.pending.length+' registros pendientes');return}const button=$('sync');button.disabled=true;try{await refreshToken();let ok=0;for(const item of [...state.pending]){try{await request('/rest/v1/attendance?on_conflict=mission_id,student_id',{method:'POST',headers:{Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify({mission_id:item.mission_id,student_id:item.student_id,recorded_at:item.recorded_at,recorded_by:state.profile.id})});state.pending=state.pending.filter(x=>x.local_id!==item.local_id);save();ok++}catch(e){status('Error al enviar asistencia: '+e.message+' · pendientes: '+state.pending.length);break}}await pull();status('Sincronización finalizada · enviados: '+ok+' · pendientes: '+state.pending.length)}catch(e){status('No se pudo sincronizar: '+e.message+' · pendientes: '+state.pending.length)}finally{button.disabled=false;render()}}
 function records(m){const out=new Map(state.attendance.filter(a=>a.mission_id===m).map(a=>[a.student_id,{...a,synced:true}]));for(const a of state.pending.filter(a=>a.mission_id===m))if(!out.has(a.student_id))out.set(a.student_id,{...a,synced:false});return out}
