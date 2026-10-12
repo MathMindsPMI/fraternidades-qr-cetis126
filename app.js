@@ -476,7 +476,7 @@ function updateAcademicAttendanceSummary() {
     presente: 0,
     falta: 0,
     retardo: 0,
-    justificante: 0
+    justificada: 0
   };
 
   for (const select of selects) {
@@ -494,7 +494,7 @@ function updateAcademicAttendanceSummary() {
     counts.presente +
     counts.falta +
     counts.retardo +
-    counts.justificante;
+    counts.justificada;
 
   const pending = selects.length - marked;
 
@@ -502,7 +502,7 @@ function updateAcademicAttendanceSummary() {
     'Presentes: ' + counts.presente +
     ' · Faltas: ' + counts.falta +
     ' · Retardos: ' + counts.retardo +
-    ' · Justificantes: ' + counts.justificante +
+    ' · justificadas: ' + counts.justificada +
     ' · Sin marcar: ' + pending +
     ' · Vista previa sin guardar.';
 }
@@ -574,7 +574,7 @@ function openAcademicAttendance(
       ['presente', 'Presente'],
       ['falta', 'Falta'],
       ['retardo', 'Retardo'],
-      ['justificante', 'Justificante']
+      ['justificada', 'justificada']
     ];
 
     options.forEach(([value, title]) => {
