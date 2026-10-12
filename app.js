@@ -619,14 +619,146 @@ $('academicScanQR').onclick = () => {
   );
 };
 
-$('academicSaveAttendance').onclick = () => {
-  alert(
-    'Esta es una vista previa. ' +
-    'Todavía no se han guardado asistencias. ' +
-    'Primero verificaremos los campos ' +
-    'y permisos de Supabase.'
-  );
+
+$('academicSaveAttendance').onclick = async () => {
+  const button = $('academicSaveAttendance');
+
+  if (!academicAssignment || !academicRoster.length) {
+    alert('Primero selecciona una asignatura y grupo.');
+    return;
+  }
+
+  const date = $('academicAttendanceDate').value;
+
+  if (!date) {
+    alert('Selecciona la fecha de asistencia.');
+    return;
+  }
+
+  const selects = [
+    ...document.querySelectorAll(
+      '#academicAttendanceList select[data-student-id]'
+    )
+  ];
+
+  const records = selects.map(select => ({
+    student_id: select.dataset.studentId,
+    status: select.value
+  }));
+
+  if (records.some(record => !record.status)) {
+    alert(
+      'Debes marcar la asistencia de todos los alumnos antes de guardar.'
+    );
+    return;
+  }
+
+  if (!confirm(
+    '¿Deseas guardar la asistencia de ' +
+    records.length +
+    ' alumnos del grupo ' +
+    academicAssignment.academic_groups?.name +
+    '?'
+  )) {
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Guardando asistencia...';
+
+  try {
+    const assignmentId = academicAssignment.id;
+
+    // Buscar si ya existe la sesión de clase.
+    let sessions = await request(
+      '/rest/v1/class_sessions' +
+      '?select=id' +
+      '&assignment_id=eq.' +
+      encodeURIComponent(assignmentId) +
+      '&session_date=eq.' +
+      encodeURIComponent(date) +
+      '&session_number=eq.1'
+    );
+
+    let sessionId;
+
+    if (sessions.length) {
+      sessionId = sessions[0].id;
+    } else {
+      // Crear una nueva sesión académica.
+      const created = await request(
+        '/rest/v1/class_sessions',
+        {
+          method: 'POST',
+          headers: {
+            Prefer: 'return=representation'
+          },
+          body: JSON.stringify({
+            assignment_id: assignmentId,
+            session_date: date,
+            session_number: 1,
+            created_by: state.profile.id
+          })
+        }
+      );
+
+      sessionId = created[0].id;
+    }
+
+    // Consultar las asistencias previamente registradas.
+    const existing = await request(
+      '/rest/v1/academic_attendance' +
+      '?select=student_id' +
+      '&session_id=eq.' +
+      encodeURIComponent(sessionId)
+    );
+
+    const existingIds = new Set(
+      existing.map(record => record.student_id)
+    );
+
+    const newRecords = records
+      .filter(record => !existingIds.has(record.student_id))
+      .map(record => ({
+        session_id: sessionId,
+        student_id: record.student_id,
+        status: record.status,
+        registration_method: 'manual',
+        recorded_by: state.profile.id
+      }));
+
+    if (newRecords.length) {
+      await request(
+        '/rest/v1/academic_attendance',
+        {
+          method: 'POST',
+          headers: {
+            Prefer: 'return=minimal'
+          },
+          body: JSON.stringify(newRecords)
+        }
+      );
+    }
+
+    alert(
+      'Asistencia procesada correctamente.\n' +
+      'Registros nuevos: ' + newRecords.length +
+      '\nRegistros existentes: ' + existing.length
+    );
+
+  } catch (error) {
+    console.error(error);
+
+    alert(
+      'No se pudo guardar la asistencia: ' +
+      error.message
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Guardar asistencia';
+  }
 };
+
 
 // ============================================
 // DATOS DE FRATERNIDADES
