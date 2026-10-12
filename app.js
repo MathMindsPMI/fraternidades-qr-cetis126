@@ -594,7 +594,42 @@ async function openAcademicAttendance(
     item.append(label, select);
     list.append(item);
   });
+  const attendanceDate = $('academicAttendanceDate').value;
 
+  try {
+    const sessions = await request(
+      '/rest/v1/class_sessions' +
+      '?select=id' +
+      '&assignment_id=eq.' +
+      encodeURIComponent(assignment.id) +
+      '&session_date=eq.' +
+      encodeURIComponent(attendanceDate) +
+      '&session_number=eq.1'
+    );
+
+    if (sessions.length) {
+      const savedRecords = await request(
+        '/rest/v1/academic_attendance' +
+        '?select=student_id,status' +
+        '&session_id=eq.' +
+        encodeURIComponent(sessions[0].id)
+      );
+
+      savedRecords.forEach(record => {
+        const select = [...list.querySelectorAll('select')]
+          .find(item =>
+            item.dataset.studentId === record.student_id
+          );
+
+        if (select) {
+          select.value = record.status;
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error al recuperar asistencias:', error);
+    alert('No se pudieron recuperar las asistencias guardadas.');
+  }
   updateAcademicAttendanceSummary();
 }
 
