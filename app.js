@@ -110,8 +110,22 @@ if (list) {
       period.textContent =
         'Periodo escolar: ' + a.school_period;
 
-      card.append(subject, group, period);
-      list.appendChild(card);
+      // Botón para registrar asistencia académica
+const attendanceButton = document.createElement('button');
+attendanceButton.type = 'button';
+attendanceButton.textContent = '📝 Registrar asistencia';
+
+attendanceButton.onclick = () => {
+  alert(
+    'Registro de asistencia\n\n' +
+    'Asignatura: ' + (a.academic_subjects?.name || '') + '\n' +
+    'Grupo: ' + (a.academic_groups?.name || '') + '\n\n' +
+    'Próximamente abriremos la lista de alumnos.'
+  );
+};
+
+card.append(subject, group, period, attendanceButton);
+list.appendChild(card);
     });
   }
 }
