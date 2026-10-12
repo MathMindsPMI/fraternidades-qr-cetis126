@@ -751,7 +751,28 @@ $('academicSaveAttendance').onclick = async () => {
     const existingIds = new Set(
       existing.map(record => record.student_id)
     );
+// ACTUALIZAR ASISTENCIAS YA REGISTRADAS
 
+const existingRecords = records.filter(record =>
+  existingIds.has(record.student_id)
+);
+
+for (const record of existingRecords) {
+  await request(
+    '/rest/v1/academic_attendance' +
+    '?session_id=eq.' + encodeURIComponent(sessionId) +
+    '&student_id=eq.' + encodeURIComponent(record.student_id),
+    {
+      method: 'PATCH',
+      headers: {
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({
+        status: record.status
+      })
+    }
+  );
+}
     const newRecords = records
       .filter(record => !existingIds.has(record.student_id))
       .map(record => ({
