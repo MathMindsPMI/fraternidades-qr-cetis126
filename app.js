@@ -122,6 +122,23 @@ async function start(){
 }
 $('loginForm').onsubmit=async e=>{e.preventDefault();$('loginMsg').textContent='Ingresando…';try{await signIn($('alias').value.trim().toLowerCase(),$('pin').value);$('pin').value='';$('loginMsg').textContent=''}catch(err){$('loginMsg').textContent=err.message}};
 $('logout').onclick=async()=>{if(state.pending.length&&!confirm('Hay asistencias pendientes. Si cierras sesión podrían perderse. ¿Continuar?'))return;await stop();state={session:null,profile:null,students:[],missions:[],attendance:[],pending:[]};save();showApp()};
+
+$('academicLogout').onclick = async () => {
+  await stop();
+
+  state = {
+    session: null,
+    profile: null,
+    students: [],
+    missions: [],
+    attendance: [],
+    pending: []
+  };
+
+  save();
+  showApp();
+};
+
 $('sync').onclick=sync;window.addEventListener('online',()=>{if(state.profile)sync()});window.addEventListener('offline',()=>{if(state.profile)render()});
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('#app>section').forEach(s=>s.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden');if(b.dataset.tab==='qrs')renderQrs();else if(b.dataset.tab!=='scanner')stop()});
 $('addMission').onclick=async()=>{if(!online())return alert('Para crear misiones necesitas Internet.');try{const name=$('missionName').value.trim(),date=$('missionDate').value;if(!name||!date)throw Error('Completa nombre y fecha.');await request('/rest/v1/missions',{method:'POST',body:JSON.stringify({name,mission_date:date})});$('missionName').value='';await sync()}catch(e){alert(e.message)}};
