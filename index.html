@@ -64,6 +64,31 @@
   </div>
 </form>
 <div id="loginMsg" class="notice"></div></section>
+<!-- PORTAL ACADÉMICO DE DOCENTES -->
+<div id="academicApp" class="hidden">
+  <section class="panel">
+    <h2>Control de asistencia académica</h2>
+    <p class="muted">
+      CETis 126 | Portal individual de docentes
+    </p>
+
+    <div class="notice">
+      Bienvenido al módulo académico.
+      Próximamente podrás consultar tus asignaturas,
+      grupos y registrar la asistencia de tus alumnos.
+    </div>
+
+    <p id="academicTeacher"></p>
+
+    <div class="actions">
+      <button id="academicLogout"
+              type="button"
+              class="secondary">
+        Cerrar sesión
+      </button>
+    </div>
+  </section>
+</div>
 <div id="app" class="hidden"><div class="actions no-print"><span id="who"></span><button id="sync" type="button">Sincronizar ahora</button><button id="logout" class="secondary" type="button">Cerrar sesión</button></div><div id="syncState" class="notice">Cargando…</div><nav class="no-print"><button data-tab="dashboard" class="active">Panel</button><button data-tab="scanner">Escáner</button><button data-tab="students">Alumnos</button><button data-tab="qrs">Credenciales QR</button><button data-tab="reports">Reportes</button></nav>
 <section id="dashboard" class="panel"><h2>Panel de asistencia</h2><label>Misión / actividad</label><select id="missionDashboard"></select><div id="stats" class="grid"></div><div id="adminMission" class="hidden"><h3>Crear misión (administración)</h3><div class="grid"><div><label>Nombre</label><input id="missionName" placeholder="Misión 3 · Restauración"></div><div><label>Fecha</label><input id="missionDate" type="date"></div></div><div class="actions"><button id="addMission">Crear misión</button></div></div><p class="notice warn">Los registros sin sincronizar solo están en este dispositivo. Descarga respaldos y sincroniza cuando tengas Internet. No cierres sesión mientras haya pendientes.</p><div class="actions"><button id="backup" class="secondary">Respaldo local JSON</button></div></section>
 <section id="scanner" class="panel hidden"><h2>Registrar asistencia</h2><label>Misión</label><select id="missionScanner"></select><div class="actions"><button id="start">Iniciar cámara</button><button id="stop" class="secondary">Detener cámara</button></div><div id="reader"></div><div id="scanMsg" class="notice">Selecciona la misión para comenzar.</div><label>Registro manual por matrícula o token</label><input id="manual" placeholder="Matrícula"><div class="actions"><button id="manualBtn">Registrar</button></div><h3>Últimas asistencias</h3><div id="recent"></div></section>
