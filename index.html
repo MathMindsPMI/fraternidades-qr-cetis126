@@ -32,7 +32,7 @@
  .qr-data{font-size:9px!important}
  .qr-bottom{font-size:8px!important;padding:5px 3px!important}
 }
-</style></head><body><header><div class="wrap"><img class="frat" src="./logo-fraternidades.webp" alt="Fraternidades"><div><h1>FRATERNIDADES QR</h1><small>CETis 126 · Control de asistencia multiusuario</small><div id="status">Sin iniciar sesión</div></div><img class="dgeti" src="./logo-dgeti.png" alt="DGETI"></div></header><main>
+</style></head><body><header><div class="wrap"><img class="frat" src="./logo-fraternidades.webp" alt="Fraternidades"><div><h1>FRATERNIDADES QR</h1><small>CETis 126 · Control de asistencia multiusuario</small><div id="status" class="hidden"></div></div><img class="dgeti" src="./logo-dgeti.png" alt="DGETI"></div></header><main>
 
 <section id="login" class="panel">
   <h2>Acceso para docentes, tutores y administración</h2>
@@ -83,17 +83,33 @@
   Preparando conexión con Supabase...
 </div>
    <div id="academicAssignments" class="panel">
-  <h3>Mis asignaturas y grupos</h3>
+     <h3>Mis asignaturas y grupos</h3>
+     <p class="muted">
+       Consulta las asignaturas y grupos que tienes asignados en el CETis 126.
+     </p>
+     <div id="academicAssignmentsList">
+       Cargando asignaturas y grupos...
+     </div>
+   </div>
 
-  <p class="muted">
-    Consulta las asignaturas y grupos
-    que tienes asignados en el CETis 126.
-  </p>
-
-  <div id="academicAssignmentsList">
-    Cargando asignaturas y grupos...
-  </div>
-</div>
+   <!-- PASE DE LISTA ACADÉMICO -->
+   <div id="academicAttendance" class="panel hidden">
+     <h3>📝 Pase de lista académico</h3>
+     <p id="academicAttendanceInfo" class="notice">
+       Selecciona una asignatura y grupo.
+     </p>
+     <label for="academicAttendanceDate">Fecha de asistencia</label>
+     <input type="date" id="academicAttendanceDate">
+     <div class="actions">
+       <button id="academicScanQR" type="button">📷 Escanear QR</button>
+       <button id="academicBack" type="button" class="secondary">Volver a mis asignaturas</button>
+     </div>
+     <div id="academicAttendanceList">Aquí aparecerá la lista de alumnos.</div>
+     <div id="academicAttendanceMessage" class="notice">Sin registros todavía.</div>
+     <div class="actions">
+       <button id="academicSaveAttendance" type="button">💾 Guardar asistencia</button>
+     </div>
+   </div>
     <div class="actions">
       <button id="academicLogout"
               type="button"
