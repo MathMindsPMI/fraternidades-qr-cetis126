@@ -5,7 +5,13 @@ try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&Array.isArray(d.pending)
 const save=()=>localStorage.setItem(KEY,JSON.stringify(state));const uid=()=>crypto.randomUUID();const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const configured=()=>/^https:\/\//.test(C.supabaseUrl)&&!C.supabaseUrl.includes('REEMPLAZAR')&&C.supabaseAnonKey&&!C.supabaseAnonKey.includes('REEMPLAZAR');
 const online=()=>navigator.onLine;
-function status(s){$('syncState').textContent=s}
+function status(s) {
+  const el = $('syncState');
+  if (el) el.textContent = s;
+
+  const academic = $('academicStatus');
+  if (academic) academic.textContent = s;
+}
 function authHeaders(token=state.session?.access_token){return {'apikey':C.supabaseAnonKey,'Authorization':'Bearer '+(token||C.supabaseAnonKey),'Content-Type':'application/json'}}
 async function api(path,opts={}){if(!configured())throw Error('Configura config.js con URL y clave pública de Supabase.');const r=await fetch(C.supabaseUrl+path,{...opts,headers:{...authHeaders(),...opts.headers}});const raw=await r.text();let data;try{data=raw?JSON.parse(raw):null}catch{data=raw}if(!r.ok)throw Error(data?.message||data?.error_description||data?.msg||'HTTP '+r.status);return data}
 async function refreshToken(){if(!state.session?.refresh_token)throw Error('No hay sesión. Inicia sesión con Internet.');const d=await api('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:state.session.refresh_token})});state.session=d;save()}
