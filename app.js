@@ -54,6 +54,24 @@ function showApp() {
       : 'Sin conexión · ' + state.pending.length + ' registros pendientes'
   );
 }
+async function loadTeacherAssignments() {
+  if (!state.profile || state.profile.role !== 'docente') return;
+
+  const teacherId = encodeURIComponent(state.profile.id);
+
+  const assignments = await request(
+    '/rest/v1/teaching_assignments' +
+    '?select=id,school_period,active,' +
+    'academic_subjects(name),' +
+    'academic_groups(name)' +
+    '&teacher_id=eq.' + teacherId +
+    '&active=eq.true'
+  );
+
+  console.log('Asignaturas y grupos del docente:', assignments);
+
+  return assignments;
+}
 async function pull(){if(!online())throw Error('Sin conexión');const [ss,mm,aa]=await Promise.all([request('/rest/v1/students?select=id,name,group_name,house,token&order=name.asc'),request('/rest/v1/missions?select=id,name,mission_date&order=mission_date.desc'),request('/rest/v1/attendance?select=mission_id,student_id,recorded_at,recorded_by')]);state.students=ss;state.missions=mm;state.attendance=aa;save();render()}
 async function sync(){if(!state.profile||!state.session)return;if(!online()){status('Sin Internet · '+state.pending.length+' registros pendientes');return}const button=$('sync');button.disabled=true;try{await refreshToken();let ok=0;for(const item of [...state.pending]){try{await request('/rest/v1/attendance?on_conflict=mission_id,student_id',{method:'POST',headers:{Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify({mission_id:item.mission_id,student_id:item.student_id,recorded_at:item.recorded_at,recorded_by:state.profile.id})});state.pending=state.pending.filter(x=>x.local_id!==item.local_id);save();ok++}catch(e){status('Error al enviar asistencia: '+e.message+' · pendientes: '+state.pending.length);break}}await pull();status('Sincronización finalizada · enviados: '+ok+' · pendientes: '+state.pending.length)}catch(e){status('No se pudo sincronizar: '+e.message+' · pendientes: '+state.pending.length)}finally{button.disabled=false;render()}}
 function records(m){const out=new Map(state.attendance.filter(a=>a.mission_id===m).map(a=>[a.student_id,{...a,synced:true}]));for(const a of state.pending.filter(a=>a.mission_id===m))if(!out.has(a.student_id))out.set(a.student_id,{...a,synced:false});return out}
