@@ -29,8 +29,19 @@ function showApp() {
     $('academicTeacher').textContent =
       'Bienvenido(a), ' + p.display_name;
 
-    status('Sesión iniciada · Portal académico');
-    return;
+   status('Consultando asignaturas y grupos...');
+
+loadTeacherAssignments()
+  .then(assignments => {
+    console.log('Asignaciones del docente:', assignments);
+    status('Asignaturas y grupos consultados correctamente');
+  })
+  .catch(error => {
+    console.error('Error al consultar asignaciones:', error);
+    status('Error al consultar asignaturas: ' + error.message);
+  });
+
+return;
   }
 
   $('who').textContent =
