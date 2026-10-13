@@ -513,6 +513,7 @@ async function openAcademicAttendance(
 ) {
   academicAssignment = assignment;
   academicRoster = students;
+  $('academicHistory').classList.add('hidden');
 
   $('academicAssignments').classList.add(
     'hidden'
