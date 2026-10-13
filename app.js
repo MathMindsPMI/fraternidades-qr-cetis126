@@ -646,7 +646,29 @@ $('academicBack').onclick = () => {
   academicRoster = [];
   academicAssignment = null;
 };
+// ABRIR HISTORIAL DE ASISTENCIAS
+$('academicHistoryButton').onclick = () => {
 
+  $('academicAttendance').classList.add('hidden');
+
+  $('academicHistory').classList.remove('hidden');
+
+  $('academicHistoryInfo').textContent =
+    $('academicAttendanceInfo').textContent;
+
+  $('academicHistoryList').textContent =
+    'Preparando historial de asistencias...';
+
+};
+
+// VOLVER DEL HISTORIAL AL PASE DE LISTA
+$('academicHistoryBack').onclick = () => {
+
+  $('academicHistory').classList.add('hidden');
+
+  $('academicAttendance').classList.remove('hidden');
+
+};
 $('academicScanQR').onclick = () => {
   alert(
     'Próximamente utilizaremos el mismo QR ' +
