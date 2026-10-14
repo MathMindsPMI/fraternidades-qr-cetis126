@@ -647,19 +647,58 @@ $('academicBack').onclick = () => {
   academicAssignment = null;
 };
 // ABRIR HISTORIAL DE ASISTENCIAS
-$('academicHistoryButton').onclick = () => {
 
+// ABRIR HISTORIAL DE ASISTENCIAS
+$('academicHistoryButton').onclick = async () => {
   $('academicAttendance').classList.add('hidden');
-
   $('academicHistory').classList.remove('hidden');
 
   $('academicHistoryInfo').textContent =
     $('academicAttendanceInfo').textContent;
 
-  $('academicHistoryList').textContent =
-    'Preparando historial de asistencias...';
+  const list = $('academicHistoryList');
+  list.textContent = 'Consultando asistencias guardadas...';
 
+  try {
+    if (!academicAssignment) {
+      throw Error('No hay una asignatura seleccionada.');
+    }
+
+    const sessions = await request(
+      '/rest/v1/class_sessions' +
+      '?select=id,session_date,session_number' +
+      '&assignment_id=eq.' +
+      encodeURIComponent(academicAssignment.id) +
+      '&order=session_date.desc'
+    );
+
+    if (!sessions.length) {
+      list.textContent =
+        'Todavía no hay asistencias registradas.';
+      return;
+    }
+
+    list.replaceChildren();
+
+    for (const session of sessions) {
+      const item = document.createElement('div');
+      item.className = 'notice';
+
+      item.textContent =
+        '📅 Fecha: ' + session.session_date +
+        ' · Sesión: ' + session.session_number;
+
+      list.appendChild(item);
+    }
+
+  } catch (error) {
+    console.error(error);
+    list.textContent =
+      'No se pudo consultar el historial: ' +
+      error.message;
+  }
 };
+
 
 // VOLVER DEL HISTORIAL AL PASE DE LISTA
 $('academicHistoryBack').onclick = () => {
