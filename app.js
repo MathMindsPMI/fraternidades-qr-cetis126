@@ -680,16 +680,34 @@ $('academicHistoryButton').onclick = async () => {
 
     list.replaceChildren();
 
-    for (const session of sessions) {
-      const item = document.createElement('div');
-      item.className = 'notice';
+  
+for (const session of sessions) {
+  const attendance = await request(
+    '/rest/v1/academic_attendance' +
+    '?select=status' +
+    '&session_id=eq.' +
+    encodeURIComponent(session.id)
+  );
 
-      item.textContent =
-        '📅 Fecha: ' + session.session_date +
-        ' · Sesión: ' + session.session_number;
+  const count = status =>
+    attendance.filter(a => a.status === status).length;
 
-      list.appendChild(item);
-    }
+  const item = document.createElement('div');
+  item.className = 'notice';
+
+  item.textContent =
+    '📅 Fecha: ' + session.session_date +
+    ' · Sesión: ' + session.session_number +
+    '\n✅ Presentes: ' + count('presente') +
+    ' · ❌ Faltas: ' + count('falta') +
+    ' · ⏰ Retardos: ' + count('retardo') +
+    ' · 📄 Justificadas: ' + count('justificada');
+
+  item.style.whiteSpace = 'pre-line';
+
+  list.appendChild(item);
+}
+
 
   } catch (error) {
     console.error(error);
