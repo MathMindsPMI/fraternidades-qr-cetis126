@@ -713,43 +713,198 @@ for (const session of sessions) {
   button.textContent = '👁️ Ver detalle';
   button.style.marginTop = '12px';
 
-  const detail = document.createElement('div');
-  detail.className = 'hidden';
-  detail.style.marginTop = '12px';
+ 
+const detail = document.createElement('div');
+detail.className = 'hidden';
+detail.style.marginTop = '14px';
+detail.style.overflowX = 'auto';
 
-  button.onclick = () => {
-    if (!detail.classList.contains('hidden')) {
-      detail.classList.add('hidden');
-      button.textContent = '👁️ Ver detalle';
-      return;
+button.onclick = () => {
+  if (!detail.classList.contains('hidden')) {
+    detail.classList.add('hidden');
+    button.textContent = '👁️ Ver detalle';
+    return;
+  }
+
+  detail.replaceChildren();
+
+  const table = document.createElement('table');
+  table.style.width = '100%';
+  table.style.borderCollapse = 'collapse';
+  table.style.background = '#fff';
+  table.style.borderRadius = '10px';
+
+  const header = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+
+  ['No.', 'Alumno', 'Matrícula', 'Asistencia', 'Acción']
+    .forEach(title => {
+      const th = document.createElement('th');
+      th.textContent = title;
+      th.style.padding = '12px';
+      th.style.textAlign = 'left';
+      th.style.background = '#dcecf5';
+      th.style.color = '#12344d';
+      headerRow.appendChild(th);
+    });
+
+  header.appendChild(headerRow);
+  table.appendChild(header);
+
+  const tbody = document.createElement('tbody');
+
+  academicRoster.forEach((student, index) => {
+    const record = attendance.find(
+      a => a.student_id === student.id
+    );
+
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid #e5e7eb';
+
+    const cell = value => {
+      const td = document.createElement('td');
+      td.textContent = value;
+      td.style.padding = '10px';
+      tr.appendChild(td);
+      return td;
+    };
+
+    cell(index + 1);
+    cell(student.name);
+    cell(student.id);
+
+    const statusCell = cell(
+      record ? record.status.toUpperCase() : 'SIN REGISTRO'
+    );
+
+    const actionCell = document.createElement('td');
+    actionCell.style.padding = '10px';
+
+    if (record) {
+      const editButton = document.createElement('button');
+      editButton.type = 'button';
+      editButton.textContent = '✏️ Modificar';
+
+      editButton.onclick = () => {
+        actionCell.replaceChildren();
+
+        const select = document.createElement('select');
+
+        [
+          ['presente', 'Presente'],
+          ['falta', 'Falta'],
+          ['retardo', 'Retardo'],
+          ['justificada', 'Justificada']
+        ].forEach(([value, label]) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          select.appendChild(option);
+        });
+
+        select.value = record.status;
+
+        const saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.textContent = '💾 Guardar';
+        saveButton.style.marginLeft = '6px';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.textContent = 'Cancelar';
+        cancelButton.style.marginLeft = '6px';
+
+        cancelButton.onclick = () => {
+          actionCell.replaceChildren(editButton);
+        };
+
+        saveButton.onclick = async () => {
+          const newStatus = select.value;
+
+          if (newStatus === record.status) {
+            actionCell.replaceChildren(editButton);
+            return;
+          }
+
+          if (!confirm(
+            '¿Cambiar la asistencia de ' +
+            student.name + ' a ' +
+            newStatus.toUpperCase() + '?'
+          )) return;
+
+          saveButton.disabled = true;
+          saveButton.textContent = 'Guardando...';
+
+          try {
+            await request(
+              '/rest/v1/academic_attendance' +
+              '?session_id=eq.' +
+              encodeURIComponent(session.id) +
+              '&student_id=eq.' +
+              encodeURIComponent(student.id),
+              {
+                method: 'PATCH',
+                headers: {
+                  Prefer: 'return=representation'
+                },
+                body: JSON.stringify({
+                  status: newStatus
+                })
+              }
+            ).then(rows => {
+              if (!Array.isArray(rows) || rows.length !== 1) {
+                throw Error(
+                  'No se confirmó la actualización del registro.'
+                );
+              }
+            });
+
+            record.status = newStatus;
+            statusCell.textContent = newStatus.toUpperCase();
+
+            summary.textContent =
+              '📅 Fecha: ' + session.session_date +
+              ' · Sesión: ' + session.session_number +
+              '\n✅ Presentes: ' + count('presente') +
+              ' · ❌ Faltas: ' + count('falta') +
+              ' · ⏰ Retardos: ' + count('retardo') +
+              ' · 📄 Justificadas: ' + count('justificada');
+
+            actionCell.replaceChildren(editButton);
+
+            alert('Asistencia actualizada correctamente.');
+
+          } catch (error) {
+            alert(
+              'No se pudo modificar la asistencia: ' +
+              error.message
+            );
+            saveButton.disabled = false;
+            saveButton.textContent = '💾 Guardar';
+          }
+        };
+
+        actionCell.appendChild(select);
+        actionCell.appendChild(saveButton);
+        actionCell.appendChild(cancelButton);
+      };
+
+      actionCell.appendChild(editButton);
+    } else {
+      actionCell.textContent = 'Sin registro';
     }
 
-    detail.replaceChildren();
+    tr.appendChild(actionCell);
+    tbody.appendChild(tr);
+  });
 
-    for (const student of academicRoster) {
-      const record = attendance.find(
-        a => a.student_id === student.id
-      );
+  table.appendChild(tbody);
+  detail.appendChild(table);
 
-      const row = document.createElement('div');
-      row.style.padding = '8px 0';
-      row.style.borderBottom = '1px solid #ddd';
+  detail.classList.remove('hidden');
+  button.textContent = 'Ocultar detalle';
+};
 
-      const status = record
-        ? record.status
-        : 'sin registro';
-
-      row.textContent =
-        student.name + ' · ' +
-        student.id + ' — ' +
-        status.toUpperCase();
-
-      detail.appendChild(row);
-    }
-
-    detail.classList.remove('hidden');
-    button.textContent = 'Ocultar detalle';
-  };
 
   item.appendChild(button);
   item.appendChild(detail);
