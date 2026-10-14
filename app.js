@@ -834,8 +834,8 @@ tr.dataset.status = record
     cell(student.id);
 
     const statusCell = cell(
-      record ? record.status.toUpperCase() : 'SIN REGISTRO'
-    ¿);
+  record ? record.status.toUpperCase() : 'SIN REGISTRO'
+);
 
     const actionCell = document.createElement('td');
     actionCell.style.padding = '10px';
