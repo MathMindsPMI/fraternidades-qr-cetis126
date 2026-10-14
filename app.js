@@ -681,10 +681,11 @@ $('academicHistoryButton').onclick = async () => {
     list.replaceChildren();
 
   
+
 for (const session of sessions) {
   const attendance = await request(
     '/rest/v1/academic_attendance' +
-    '?select=status' +
+    '?select=student_id,status' +
     '&session_id=eq.' +
     encodeURIComponent(session.id)
   );
@@ -695,7 +696,8 @@ for (const session of sessions) {
   const item = document.createElement('div');
   item.className = 'notice';
 
-  item.textContent =
+  const summary = document.createElement('div');
+  summary.textContent =
     '📅 Fecha: ' + session.session_date +
     ' · Sesión: ' + session.session_number +
     '\n✅ Presentes: ' + count('presente') +
@@ -703,8 +705,54 @@ for (const session of sessions) {
     ' · ⏰ Retardos: ' + count('retardo') +
     ' · 📄 Justificadas: ' + count('justificada');
 
-  item.style.whiteSpace = 'pre-line';
+  summary.style.whiteSpace = 'pre-line';
+  item.appendChild(summary);
 
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = '👁️ Ver detalle';
+  button.style.marginTop = '12px';
+
+  const detail = document.createElement('div');
+  detail.className = 'hidden';
+  detail.style.marginTop = '12px';
+
+  button.onclick = () => {
+    if (!detail.classList.contains('hidden')) {
+      detail.classList.add('hidden');
+      button.textContent = '👁️ Ver detalle';
+      return;
+    }
+
+    detail.replaceChildren();
+
+    for (const student of academicRoster) {
+      const record = attendance.find(
+        a => a.student_id === student.id
+      );
+
+      const row = document.createElement('div');
+      row.style.padding = '8px 0';
+      row.style.borderBottom = '1px solid #ddd';
+
+      const status = record
+        ? record.status
+        : 'sin registro';
+
+      row.textContent =
+        student.name + ' · ' +
+        student.id + ' — ' +
+        status.toUpperCase();
+
+      detail.appendChild(row);
+    }
+
+    detail.classList.remove('hidden');
+    button.textContent = 'Ocultar detalle';
+  };
+
+  item.appendChild(button);
+  item.appendChild(detail);
   list.appendChild(item);
 }
 
