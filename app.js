@@ -751,6 +751,61 @@ button.onclick = () => {
   header.appendChild(headerRow);
   table.appendChild(header);
 
+  // BUSCADOR Y FILTROS DEL HISTORIAL
+  const filters = document.createElement('div');
+  filters.style.display = 'flex';
+  filters.style.flexWrap = 'wrap';
+  filters.style.gap = '10px';
+  filters.style.marginBottom = '14px';
+
+  const search = document.createElement('input');
+  search.type = 'search';
+  search.placeholder = '🔎 Buscar alumno o matrícula';
+  search.style.flex = '2';
+  search.style.minWidth = '200px';
+
+  const statusFilter = document.createElement('select');
+  statusFilter.style.flex = '1';
+  statusFilter.style.minWidth = '150px';
+
+  [
+    ['', 'Todas las asistencias'],
+    ['presente', 'Presentes'],
+    ['falta', 'Faltas'],
+    ['retardo', 'Retardos'],
+    ['justificada', 'Justificadas'],
+    ['sin registro', 'Sin registro']
+  ].forEach(([value, label]) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    statusFilter.appendChild(option);
+  });
+
+  filters.appendChild(search);
+  filters.appendChild(statusFilter);
+  detail.appendChild(filters);
+
+  const applyFilters = () => {
+    const term = search.value.trim().toLowerCase();
+    const selected = statusFilter.value;
+
+    tbody.querySelectorAll('tr').forEach(row => {
+      const matchesText =
+        row.dataset.search.includes(term);
+
+      const matchesStatus =
+        !selected || row.dataset.status === selected;
+
+      row.hidden = !(matchesText && matchesStatus);
+      row.style.display =
+        matchesText && matchesStatus ? '' : 'none';
+    });
+  };
+
+  search.addEventListener('input', applyFilters);
+  statusFilter.addEventListener('change', applyFilters);
+
   const tbody = document.createElement('tbody');
 
   academicRoster.forEach((student, index) => {
@@ -760,7 +815,12 @@ button.onclick = () => {
 
     const tr = document.createElement('tr');
     tr.style.borderBottom = '1px solid #e5e7eb';
+tr.dataset.search =
+  (student.name + ' ' + student.id).toLowerCase();
 
+tr.dataset.status = record
+  ? record.status
+  : 'sin registro';
     const cell = value => {
       const td = document.createElement('td');
       td.textContent = value;
@@ -775,7 +835,7 @@ button.onclick = () => {
 
     const statusCell = cell(
       record ? record.status.toUpperCase() : 'SIN REGISTRO'
-    );
+    ¿);
 
     const actionCell = document.createElement('td');
     actionCell.style.padding = '10px';
