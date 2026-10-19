@@ -1050,6 +1050,7 @@ function exportAcademicAttendanceCSV(session, attendance) {
 
  // CONCENTRADO DE ASISTENCIAS POR SESIONES
 $('academicConcentratedButton').onclick = async () => {
+  alert('El botón del concentrado está funcionando');
   const panel = $('academicConcentratedPanel');
   const container = $('academicConcentratedTable');
 
