@@ -1048,6 +1048,106 @@ function exportAcademicAttendanceCSV(session, attendance) {
   URL.revokeObjectURL(url);
 }
 
+ // CONCENTRADO DE ASISTENCIAS POR SESIONES
+$('academicConcentratedButton').onclick = async () => {
+  const panel = $('academicConcentratedPanel');
+  const container = $('academicConcentratedTable');
+
+  panel.classList.toggle('hidden');
+
+  if (panel.classList.contains('hidden')) return;
+
+  container.textContent = 'Cargando concentrado...';
+
+  try {
+    if (!academicAssignment) {
+      throw Error('Selecciona una asignatura primero.');
+    }
+
+    const sessions = await request(
+      '/rest/v1/class_sessions' +
+      '?select=id,session_date,session_number' +
+      '&assignment_id=eq.' +
+      encodeURIComponent(academicAssignment.id) +
+      '&order=session_date.asc,session_number.asc'
+    );
+
+    const recordsBySession = [];
+
+    for (const session of sessions) {
+      const records = await request(
+        '/rest/v1/academic_attendance' +
+        '?select=student_id,status' +
+        '&session_id=eq.' +
+        encodeURIComponent(session.id)
+      );
+
+      recordsBySession.push(
+        new Map(records.map(r => [r.student_id, r.status]))
+      );
+    }
+
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+
+    const header = document.createElement('tr');
+
+    const addCell = (row, value, heading = false) => {
+      const cell = document.createElement(heading ? 'th' : 'td');
+      cell.textContent = value;
+      cell.style.padding = '10px';
+      cell.style.border = '1px solid #d8e3eb';
+      if (heading) cell.style.background = '#dcecf5';
+      row.appendChild(cell);
+    };
+
+    addCell(header, 'Matrícula', true);
+    addCell(header, 'Nombre del alumno', true);
+
+    sessions.forEach(session => {
+      addCell(
+        header,
+        'Sesión ' + session.session_number +
+        ' · ' + session.session_date,
+        true
+      );
+    });
+
+    table.appendChild(header);
+
+    academicRoster.forEach(student => {
+      const row = document.createElement('tr');
+
+      addCell(row, student.id);
+      addCell(row, student.name);
+
+      recordsBySession.forEach(records => {
+        const status = records.get(student.id);
+        addCell(
+          row,
+          ({
+            presente: 'P',
+            falta: 'F',
+            retardo: 'R',
+            justificada: 'J'
+          })[status] || '—'
+        );
+      });
+
+      table.appendChild(row);
+    });
+
+    container.replaceChildren(table);
+
+  } catch (error) {
+    console.error(error);
+    container.textContent =
+      'No se pudo cargar el concentrado: ' + error.message;
+  }
+};
+
+
 // VOLVER DEL HISTORIAL AL PASE DE LISTA
 $('academicHistoryBack').onclick = () => {
 
