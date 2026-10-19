@@ -708,6 +708,19 @@ for (const session of sessions) {
   summary.style.whiteSpace = 'pre-line';
   item.appendChild(summary);
 
+  
+const excelButton = document.createElement('button');
+excelButton.type = 'button';
+excelButton.textContent = '📥 Descargar Excel';
+excelButton.className = 'secondary';
+excelButton.style.margin = '12px 8px 0 0';
+
+excelButton.onclick = () => {
+  exportAcademicAttendanceCSV(session, attendance);
+};
+
+item.appendChild(excelButton);
+
   const button = document.createElement('button');
   button.type = 'button';
   button.textContent = '👁️ Ver detalle';
@@ -980,6 +993,60 @@ tr.dataset.status = record
   }
 };
 
+
+function exportAcademicAttendanceCSV(session, attendance) {
+  const headers = [
+    'No.',
+    'Alumno',
+    'Matricula',
+    'Fecha',
+    'Sesion',
+    'Asistencia'
+  ];
+
+  const rows = academicRoster.map((student, index) => {
+    const record = attendance.find(
+      a => a.student_id === student.id
+    );
+
+    return [
+      index + 1,
+      student.name,
+      student.id,
+      session.session_date,
+      session.session_number,
+      record ? record.status.toUpperCase() : 'SIN REGISTRO'
+    ];
+  });
+
+  const csv = [headers, ...rows]
+    .map(row =>
+      row.map(value =>
+        '"' + String(value ?? '').replace(/"/g, '""') + '"'
+      ).join(',')
+    )
+    .join('\r\n');
+
+  const blob = new Blob(
+    ['\uFEFF' + csv],
+    { type: 'text/csv;charset=utf-8;' }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download =
+    'Asistencia_' +
+    academicAssignment.academic_groups.name +
+    '_' + session.session_date + '.csv';
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+}
 
 // VOLVER DEL HISTORIAL AL PASE DE LISTA
 $('academicHistoryBack').onclick = () => {
