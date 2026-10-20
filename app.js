@@ -1400,11 +1400,20 @@ $('academicHistoryBack').onclick = () => {
   $('academicAttendance').classList.remove('hidden');
 
 };
-$('academicScanQR').onclick = () => {
+$('academicScanQR').onclick = async () => {
+  if (!academicAssignment || !academicRoster.length) {
+    alert('Primero selecciona una asignatura y grupo.');
+    return;
+  }
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    alert('Este dispositivo no permite acceder a la cámara.');
+    return;
+  }
+
   alert(
-    'Próximamente utilizaremos el mismo QR ' +
-    'de las fraternidades para registrar ' +
-    'la asistencia académica.'
+    'El grupo está listo para escanear sus credenciales QR. ' +
+    'En el siguiente paso conectaremos la cámara.'
   );
 };
 
