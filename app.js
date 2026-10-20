@@ -424,7 +424,7 @@ async function loadTeacherAssignments() {
       try {
         const students = await request(
           '/rest/v1/students' +
-          '?select=id,name,group_name' +
+          '?select=id,name,group_name,token' +
           '&group_name=eq.' +
           encodeURIComponent(groupName) +
           '&order=name.asc'
@@ -505,6 +505,44 @@ function updateAcademicAttendanceSummary() {
     ' · justificadas: ' + counts.justificada +
     ' · Sin marcar: ' + pending +
     ' · Vista previa sin guardar.';
+}
+function markAcademicQR(code) {
+  if (!academicAssignment || !academicRoster.length) {
+    alert('Primero selecciona una asignatura y grupo.');
+    return;
+  }
+
+  const student = academicRoster.find(
+    s => s.token === code || s.id === code
+  );
+
+  if (!student) {
+    alert('Este QR no corresponde a un alumno del grupo seleccionado.');
+    return;
+  }
+
+  const select = [
+    ...document.querySelectorAll(
+      '#academicAttendanceList select[data-student-id]'
+    )
+  ].find(
+    element => element.dataset.studentId === String(student.id)
+  );
+
+  if (!select) {
+    alert('No se encontró al alumno en la lista de asistencia.');
+    return;
+  }
+
+  if (select.value === 'presente') {
+    alert('Este alumno ya está marcado como presente.');
+    return;
+  }
+
+  select.value = 'presente';
+  select.dispatchEvent(new Event('change', { bubbles: true }));
+
+  alert('Asistencia registrada en la lista: ' + student.name);
 }
 
 async function openAcademicAttendance(
@@ -2416,7 +2454,11 @@ async function start() {
               last = code;
               lastAt = now;
 
-              mark(code);
+              if (window.academicQRMode === true) {
+  markAcademicQR(code);
+} else {
+  mark(code);
+}
             }
           }
         }
