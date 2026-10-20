@@ -762,7 +762,7 @@ button.onclick = () => {
     });
 
   header.appendChild(headerRow);
-  table.appendChild(header);
+   table.appendChild(header);
 
   // BUSCADOR Y FILTROS DEL HISTORIAL
   const filters = document.createElement('div');
@@ -1113,6 +1113,12 @@ $('academicConcentratedButton').onclick = async () => {
         true
       );
     });
+    
+addCell(header, 'Presentes', true);
+addCell(header, 'Faltas', true);
+addCell(header, 'Retardos', true);
+addCell(header, 'Justificadas', true);
+addCell(header, '% Asistencia', true);
 
     table.appendChild(header);
 
@@ -1134,6 +1140,28 @@ $('academicConcentratedButton').onclick = async () => {
           })[status] || '—'
         );
       });
+
+const statuses = recordsBySession
+  .map(records => records.get(student.id))
+  .filter(Boolean);
+
+const count = status =>
+  statuses.filter(s => s === status).length;
+
+const presentes = count('presente');
+const faltas = count('falta');
+const retardos = count('retardo');
+const justificadas = count('justificada');
+
+const porcentaje = statuses.length
+  ? Math.round(100 * presentes / statuses.length)
+  : 0;
+
+addCell(row, presentes);
+addCell(row, faltas);
+addCell(row, retardos);
+addCell(row, justificadas);
+addCell(row, porcentaje + '%');
 
       table.appendChild(row);
     });
