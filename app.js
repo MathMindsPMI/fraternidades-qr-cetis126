@@ -1240,6 +1240,13 @@ academicRoster.forEach(student => {
 });
 
 const resumen = $('academicGroupSummary');
+    const promedioMostrar = totalSesiones === 0
+  ? '—'
+  : promedioGrupo + '%';
+
+const riesgoMostrar = totalSesiones === 0
+  ? '—'
+  : alumnosBajaAsistencia;
 
 resumen.innerHTML = `
   <div class="notice">
@@ -1249,10 +1256,10 @@ resumen.innerHTML = `
     📅 <strong>Sesiones:</strong> ${totalSesiones}
   </div>
   <div class="notice">
-    📊 <strong>Asistencia promedio:</strong> ${promedioGrupo}%
+    📊 <strong>Asistencia promedio:</strong> ${promedioMostrar}
   </div>
   <div class="notice">
-    ⚠️ <strong>Asistencia baja:</strong> ${alumnosBajaAsistencia}
+    ⚠️ <strong>Asistencia baja:</strong> ${riesgoMostrar}
   </div>
 `;
     
