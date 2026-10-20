@@ -154,7 +154,17 @@ input,select{border:1px solid #cadbe5;border-radius:11px}
        <button id="academicBack" type="button" class="secondary">Volver a mis asignaturas</button>
       <button id="academicHistoryButton" type="button" class="secondary">📊 Historial de asistencias</button>
      </div>
-     <div id="academicAttendanceList">Aquí aparecerá la lista de alumnos.</div>
+<div id="academicQRReader" class="panel hidden">
+  <h3>📷 Escáner de asistencia académica</h3>
+  <p>Acerca la credencial QR del estudiante a la cámara.</p>
+  <div id="academicQRVideo"></div>
+  <div class="actions">
+    <button id="academicQRClose" type="button" class="secondary">
+      ✖ Cerrar cámara
+    </button>
+  </div>
+</div>
+    <div id="academicAttendanceList">Aquí aparecerá la lista de alumnos.</div>
      <div id="academicAttendanceMessage" class="notice">Sin registros todavía.</div>
      <div class="actions">
        <button id="academicSaveAttendance" type="button">💾 Guardar asistencia</button>
