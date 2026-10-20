@@ -1173,6 +1173,57 @@ addCell(row, porcentaje + '%');
       table.appendChild(row);
     });
 
+const totalAlumnos = academicRoster.length;
+const totalSesiones = sessions.length;
+
+let sumaPorcentajes = 0;
+let alumnosBajaAsistencia = 0;
+
+academicRoster.forEach(student => {
+  const statuses = recordsBySession
+    .map(records => records.get(student.id))
+    .filter(Boolean);
+
+  if (statuses.length === 0) return;
+
+  const asistenciasValidas = statuses.filter(
+    status =>
+      status === 'presente' ||
+      status === 'retardo' ||
+      status === 'justificada'
+  ).length;
+
+  const porcentaje =
+    (asistenciasValidas / statuses.length) * 100;
+
+  sumaPorcentajes += porcentaje;
+
+  if (porcentaje < 80) {
+    alumnosBajaAsistencia++;
+  }
+});
+
+const promedioGrupo = totalAlumnos
+  ? Math.round(sumaPorcentajes / totalAlumnos)
+  : 0;
+
+const resumen = $('academicGroupSummary');
+
+resumen.innerHTML = `
+  <div class="notice">
+    👥 <strong>Alumnos:</strong> ${totalAlumnos}
+  </div>
+  <div class="notice">
+    📅 <strong>Sesiones:</strong> ${totalSesiones}
+  </div>
+  <div class="notice">
+    📊 <strong>Asistencia promedio:</strong> ${promedioGrupo}%
+  </div>
+  <div class="notice">
+    ⚠️ <strong>Asistencia baja:</strong> ${alumnosBajaAsistencia}
+  </div>
+`;
+
     container.replaceChildren(table);
 
   } catch (error) {
