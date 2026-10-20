@@ -1147,6 +1147,55 @@ $('academicConcentratedButton').onclick = async () => {
   }
 };
 
+ // DESCARGAR CONCENTRADO DE ASISTENCIAS EN EXCEL
+$('academicConcentratedExcel').onclick = () => {
+  const table = $('academicConcentratedTable').querySelector('table');
+
+  if (!table) {
+    alert('Primero abre el concentrado de asistencias.');
+    return;
+  }
+
+  const csvCell = value =>
+    '"' + String(value ?? '').replace(/"/g, '""') + '"';
+
+  const rows = [...table.querySelectorAll('tr')].map(row =>
+    [...row.querySelectorAll('th, td')].map(cell =>
+      csvCell(cell.textContent.trim())
+    ).join(',')
+  );
+
+  const csv = '\uFEFF' + rows.join('\r\n');
+
+  const blob = new Blob([csv], {
+    type: 'text/csv;charset=utf-8;'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  const groupName =
+    academicAssignment?.academic_groups?.name || 'Grupo';
+
+  const subjectName =
+    academicAssignment?.academic_subjects?.name || 'Asignatura';
+
+  const safeName = value =>
+    String(value).replace(/[^\w-]/g, '_');
+
+  link.href = url;
+  link.download =
+    'Concentrado_' +
+    safeName(groupName) + '_' +
+    safeName(subjectName) + '.csv';
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
 
 // VOLVER DEL HISTORIAL AL PASE DE LISTA
 $('academicHistoryBack').onclick = () => {
