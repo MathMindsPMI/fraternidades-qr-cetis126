@@ -1153,9 +1153,16 @@ const faltas = count('falta');
 const retardos = count('retardo');
 const justificadas = count('justificada');
 
+
+const asistenciasValidas =
+  presentes + retardos + justificadas;
+
 const porcentaje = statuses.length
-  ? Math.round(100 * presentes / statuses.length)
+  ? Math.round(
+      100 * asistenciasValidas / statuses.length
+    )
   : 0;
+
 
 addCell(row, presentes);
 addCell(row, faltas);
