@@ -1459,7 +1459,9 @@ try {
 }
 };
 
-
+$('academicQRClose').onclick = async () => {
+  await stop();
+};
 $('academicSaveAttendance').onclick = async () => {
   const button = $('academicSaveAttendance');
 
@@ -2302,6 +2304,15 @@ async function stop() {
   scanContext = null;
 
   $('reader').replaceChildren();
+  if ($('academicQRVideo')) {
+  $('academicQRVideo').replaceChildren();
+}
+
+if ($('academicQRReader')) {
+  $('academicQRReader').classList.add('hidden');
+}
+
+window.academicQRMode = false;
 }
 
 async function start() {
@@ -2352,7 +2363,12 @@ async function start() {
     video.muted = true;
     video.srcObject = stream;
 
-    $('reader').replaceChildren(video);
+    if (window.academicQRMode === true) {
+  $('academicQRReader').classList.remove('hidden');
+  $('academicQRVideo').replaceChildren(video);
+} else {
+  $('reader').replaceChildren(video);
+}
 
     await video.play();
 
