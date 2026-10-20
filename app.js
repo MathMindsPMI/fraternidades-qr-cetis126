@@ -1207,6 +1207,38 @@ const promedioGrupo = totalAlumnos
   ? Math.round(sumaPorcentajes / totalAlumnos)
   : 0;
 
+const alumnosEnRiesgo = [];
+
+academicRoster.forEach(student => {
+  const statuses = recordsBySession
+    .map(records => records.get(student.id))
+    .filter(Boolean);
+
+  if (statuses.length === 0) return;
+
+  const asistenciasValidas = statuses.filter(
+    status =>
+      status === 'presente' ||
+      status === 'retardo' ||
+      status === 'justificada'
+  ).length;
+
+  const porcentaje = Math.round(
+    100 * asistenciasValidas / statuses.length
+  );
+
+  if (porcentaje < 80) {
+    alumnosEnRiesgo.push({
+      matricula: student.id,
+      nombre: student.name,
+      faltas: statuses.filter(
+        status => status === 'falta'
+      ).length,
+      porcentaje: porcentaje
+    });
+  }
+});
+
 const resumen = $('academicGroupSummary');
 
 resumen.innerHTML = `
@@ -1223,6 +1255,73 @@ resumen.innerHTML = `
     ⚠️ <strong>Asistencia baja:</strong> ${alumnosBajaAsistencia}
   </div>
 `;
+    
+const botonRiesgo = document.createElement('button');
+botonRiesgo.type = 'button';
+botonRiesgo.textContent = '👁️ Ver alumnos en riesgo';
+botonRiesgo.className = 'secondary';
+
+resumen.appendChild(botonRiesgo);
+
+const detalleRiesgo = document.createElement('div');
+detalleRiesgo.className = 'hidden';
+detalleRiesgo.style.gridColumn = '1 / -1';
+detalleRiesgo.style.overflowX = 'auto';
+
+botonRiesgo.onclick = () => {
+  detalleRiesgo.classList.toggle('hidden');
+
+  botonRiesgo.textContent =
+    detalleRiesgo.classList.contains('hidden')
+      ? '👁️ Ver alumnos en riesgo'
+      : '🙈 Ocultar alumnos en riesgo';
+
+  if (detalleRiesgo.classList.contains('hidden')) return;
+
+  detalleRiesgo.replaceChildren();
+
+  const tabla = document.createElement('table');
+  tabla.style.width = '100%';
+
+  const encabezado = document.createElement('tr');
+
+  ['Matrícula', 'Alumno', 'Faltas', '% Asistencia']
+    .forEach(titulo => {
+      const th = document.createElement('th');
+      th.textContent = titulo;
+      encabezado.appendChild(th);
+    });
+
+  tabla.appendChild(encabezado);
+
+  alumnosEnRiesgo.forEach(alumno => {
+    const fila = document.createElement('tr');
+
+    [
+      alumno.matricula,
+      alumno.nombre,
+      alumno.faltas,
+      alumno.porcentaje + '%'
+    ].forEach(valor => {
+      const td = document.createElement('td');
+      td.textContent = valor;
+      td.style.padding = '10px';
+      fila.appendChild(td);
+    });
+
+    tabla.appendChild(fila);
+  });
+
+  if (alumnosEnRiesgo.length === 0) {
+    detalleRiesgo.textContent =
+      '✅ No hay alumnos con asistencia inferior al 80%.';
+  } else {
+    detalleRiesgo.appendChild(tabla);
+  }
+};
+
+resumen.appendChild(detalleRiesgo);
+
 
     container.replaceChildren(table);
 
