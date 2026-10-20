@@ -1449,10 +1449,14 @@ $('academicScanQR').onclick = async () => {
     return;
   }
 
-  alert(
-    'El grupo está listo para escanear sus credenciales QR. ' +
-    'En el siguiente paso conectaremos la cámara.'
-  );
+window.academicQRMode = true;
+
+try {
+  await start();
+} catch (error) {
+  window.academicQRMode = false;
+  alert('No se pudo iniciar el lector QR: ' + error.message);
+}
 };
 
 
