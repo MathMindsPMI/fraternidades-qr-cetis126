@@ -1168,7 +1168,10 @@ addCell(row, presentes);
 addCell(row, faltas);
 addCell(row, retardos);
 addCell(row, justificadas);
-addCell(row, porcentaje + '%');
+addCell(
+  row,
+  statuses.length === 0 ? '—' : porcentaje + '%'
+);
 
       table.appendChild(row);
     });
